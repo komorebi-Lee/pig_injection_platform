@@ -1,0 +1,42 @@
+# 团队/服务器上部署 PostgreSQL + 后端的一键启动。
+# 本机（无 Docker）请看 docs/03_快速开始.md 里的便携版方案。
+services:
+  postgres:
+    image: postgres:17
+    container_name: pig_injection_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pigadmin
+      POSTGRES_PASSWORD: change_me_in_production
+      POSTGRES_DB: pig_injection
+      TZ: Asia/Shanghai
+    ports:
+      - "55432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./backend/sql/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pigadmin -d pig_injection"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: pig_injection_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://pigadmin:change_me_in_production@postgres:5432/pig_injection
+      ARM_DRIVER: mock
+      TZ: Asia/Shanghai
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend/storage:/app/storage
+
+volumes:
+  pg_data:

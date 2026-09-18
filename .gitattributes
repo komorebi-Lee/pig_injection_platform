@@ -1,0 +1,14 @@
+# 统一换行符，避免 Windows 提交产生整文件 diff
+* text=auto eol=lf
+
+# 二进制文件不做换行转换
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary
+*.docx binary
+*.xlsx binary
+*.zip  binary
+
+# 文档 diff 摘要
+*.md diff=markdown
